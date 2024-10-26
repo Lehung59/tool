@@ -1,0 +1,10 @@
+# Bỏ qua tất cả các thư mục node_modules trong toàn bộ dự án
+node_modules/
+
+# Bỏ qua tất cả các file package-lock.json, token.json trong toàn bộ dự án
+**/package-lock.json
+**/token.json
+
+# Bỏ qua các file cấu hình hoặc không cần thiết của Node.js
+*.log
+*.bat
