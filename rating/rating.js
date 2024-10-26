@@ -106,7 +106,7 @@ class Rating {
         }
     }
 
-    async getTaskListByGroup(token, group, lang = 'vi') {
+    async getTaskListByGroup(token, group, lang = 'en') {
         const url = "https://api.ratingtma.com/task/task.list";
         const headers = { 
             ...this.headers, 
@@ -120,7 +120,8 @@ class Rating {
             if (response.status === 200 && response.data.response) {
                 return { success: true, data: response.data.response };
             } else {
-                return { success: false, error: 'Invalid response format' };
+
+                return { success: false, error: 401 };
             }
         } catch (error) {
             return { success: false, error: error.message };
@@ -168,6 +169,7 @@ class Rating {
                         }
                     }
                 } else {
+
                     this.log(`Failed to get tasks for ${group}: ${response.error}`, 'error');
                 }
             } catch (error) {
@@ -221,8 +223,9 @@ class Rating {
         if (fs.existsSync(tokenFile)) {
             tokens = JSON.parse(fs.readFileSync(tokenFile, 'utf8'));
         }
-
+        let trycount = 0;
         while (true) {
+            let isRetry = 0;
             for (let i = 0; i < data.length; i++) {
                 const auth = data[i];
                 const userId = JSON.parse(decodeURIComponent(auth.split('user=')[1].split('&')[0])).id;
@@ -240,6 +243,9 @@ class Rating {
                         this.log('Xác thực thành công!', 'success');
                     } else {
                         this.log(`Xác thực không thành công! ${authResult.error}`, 'error');
+                        tokens[userId] = "";
+                        this.log(`Thử lại lần ${trycount+=1}`)
+                        if(trycount == 3) break;
                         continue;
                     }
                 } else {
@@ -261,6 +267,16 @@ class Rating {
                         this.log('Không có nhiệm vụ Daily Rewards Calendar nào sẵn sàng', 'warning');
                     }
                 } else {
+                    if(taskListResult.error == 401){
+                        tokens[userId] = "";
+                        this.log(`Thử lại lần ${trycount+=1}`)
+                        if(trycount < 3){
+                            isRetry = 1;
+                            break;
+                        }
+                        isRetry = -1;
+                    }
+
                     this.log(`Không thể lấy danh sách nhiệm vụ: ${taskListResult.error}`, 'error');
                 }
 
@@ -296,6 +312,13 @@ class Rating {
 
                 await new Promise(resolve => setTimeout(resolve, 1000));
             }
+            if(isRetry == 1) {
+
+
+                continue;
+
+            }
+            if(isRetry == -1) break;
 
             await this.countdown(86400);
         }

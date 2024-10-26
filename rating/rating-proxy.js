@@ -301,7 +301,7 @@ class Rating {
                 await new Promise(resolve => setTimeout(resolve, 1000));
             }
 
-            await this.countdown(20);
+            await this.countdown(86400);
         }
     }
 }
