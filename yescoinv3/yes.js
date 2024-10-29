@@ -245,7 +245,7 @@ class YesCoinBot {
 
     async getAccountBuildInfo(token) {
         try {
-            const url = 'https://api.yescoin.gold/build/getAccountBuildInfo';
+            const url = 'https://api-backend.yescoin.gold/game/getGameInfo';
             const headers = this.headers(token);
             const response = await axios.get(url, { headers });
             if (response.data.code === 0) {
@@ -392,29 +392,37 @@ class YesCoinBot {
         });
 
         return new Promise((resolve) => {
-            readline.question("Bạn có muốn làm nhiệm vụ không? (y/n, mặc định n): ", (taskAnswer) => {
-                this.cekTaskEnable = taskAnswer.toLowerCase() === 'y' ? 'y' : 'n';
+            this.cekTaskEnable = 1;
+            this.upgradeMultiEnable = 1;
+            this.upgradeFillEnable = 1;
+            this.maxLevel = 10;
+            resolve();
 
-                readline.question("Bạn có muốn nâng cấp multi không? (y/n, mặc định n): ", (multiAnswer) => {
-                    this.upgradeMultiEnable = multiAnswer.toLowerCase() === 'y' ? 'y' : 'n';
 
-                    readline.question("Bạn có muốn nâng cấp fill rate không? (y/n, mặc định n): ", (fillAnswer) => {
-                        this.upgradeFillEnable = fillAnswer.toLowerCase() === 'y' ? 'y' : 'n';
 
-                        if (this.upgradeMultiEnable === 'y' || this.upgradeFillEnable === 'y') {
-                            readline.question("Nhập lv tối đa để nâng cấp (mặc định: 10: ", (maxLevelAnswer) => {
-                                this.maxLevel = maxLevelAnswer ? parseInt(maxLevelAnswer) : 10;
-                                readline.close();
-                                resolve();
-                            });
-                        } else {
-                            this.maxLevel = 5;
-                            readline.close();
-                            resolve();
-                        }
-                    });
-                });
-            });
+            // readline.question("Bạn có muốn làm nhiệm vụ không? (y/n, mặc định n): ", (taskAnswer) => {
+            //     this.cekTaskEnable = taskAnswer.toLowerCase() === 'y' ? 'y' : 'n';
+
+            //     readline.question("Bạn có muốn nâng cấp multi không? (y/n, mặc định n): ", (multiAnswer) => {
+            //         this.upgradeMultiEnable = multiAnswer.toLowerCase() === 'y' ? 'y' : 'n';
+
+            //         readline.question("Bạn có muốn nâng cấp fill rate không? (y/n, mặc định n): ", (fillAnswer) => {
+            //             this.upgradeFillEnable = fillAnswer.toLowerCase() === 'y' ? 'y' : 'n';
+
+            //             if (this.upgradeMultiEnable === 'y' || this.upgradeFillEnable === 'y') {
+            //                 readline.question("Nhập lv tối đa để nâng cấp (mặc định: 10: ", (maxLevelAnswer) => {
+            //                     this.maxLevel = maxLevelAnswer ? parseInt(maxLevelAnswer) : 10;
+            //                     readline.close();
+            //                     resolve();
+            //                 });
+            //             } else {
+            //                 this.maxLevel = 5;
+            //                 readline.close();
+            //                 resolve();
+            //             }
+            //         });
+            //     });
+            // });
         });
     }
 

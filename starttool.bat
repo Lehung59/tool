@@ -32,3 +32,6 @@ start wt -w 0 nt -d "C:\Users\nguye\Downloads\Telegram Desktop\tool\babydoge-fix
 
 timeout /t 5 /nobreak
 start wt -w 0 nt -d "C:\Users\nguye\Downloads\Telegram Desktop\tool\tapcoin" cmd /k "node .\tapcoin.js"
+
+timeout /t 5 /nobreak
+start wt -w 0 nt -d "C:\Users\nguye\Downloads\Telegram Desktop\tool\yescoinv3" cmd /k "node .\yes.js"
