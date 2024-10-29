@@ -3,17 +3,15 @@ import sys
 import random
 import time
 import traceback
-import requests
 import base64
 import hashlib
-from Crypto.Cipher import AES
-from Crypto import Random
-from colorama import *
+from Crypto.Cipher import AES 
+from Crypto import Random # type: ignore
+from colorama import * # type: ignore
 from datetime import datetime
 import json
-import brotli
 
-import cloudscraper
+import cloudscraper # type: ignore
 
 scraper = cloudscraper.create_scraper()
 
@@ -141,8 +139,22 @@ class Banana:
         }
 
         data = {"tgInfo": f"{data}"}
-
+        print("\nData:", data)
         response = scraper.post(url=url, headers=headers, data=data)
+        # Print all response details
+        print("\nStatus Code:", response.status_code)
+        print("\nHeaders:", response.headers)
+
+        # Try printing JSON data if possible
+        try:
+            print("\nJSON Content:", response.json())
+        except ValueError:
+            # If the response is not JSON, print as text
+            print("\nText Content:", response.text)
+
+        # Print raw response content
+        print("\nRaw Content:", response.content) 
+
 
         return response
 

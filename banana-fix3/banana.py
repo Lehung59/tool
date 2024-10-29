@@ -139,7 +139,7 @@ class Banana:
         }
 
         data = {"tgInfo": f"{data}"}
-
+        print("\nData:", data)
         response = scraper.post(url=url, headers=headers, data=data)
 
         return response
