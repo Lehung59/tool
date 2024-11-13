@@ -351,7 +351,7 @@ class PinEye {
         const hoiveso = 1;
 
         // const muaPranaCards = await this.askQuestion('Bạn có muốn mua Thẻ Prana không? (y/n): ');
-        const hoiPranaCards = muaPranaCards.toLowerCase() === 'y';
+        const hoiPranaCards = 1;
 
         this.log(`Tool được share tại kênh telegram Dân Cày Airdrop!`, 'custom');
 

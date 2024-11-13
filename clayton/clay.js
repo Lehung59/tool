@@ -2,17 +2,11 @@ const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
 const colors = require('colors');
-const { DateTime } = require('luxon');
-const { HttpsProxyAgent } = require('https-proxy-agent');
-
-const maxThreads = 10; // số luồng
 
 class Clayton {
-    constructor(accountIndex, proxy, initData) {
+    constructor(accountIndex, initData) {
         this.accountIndex = accountIndex;
-        this.proxy = proxy;
         this.initData = initData;
-        this.apiBaseId = null;
         this.headers = {
             "Accept": "application/json, text/plain, */*",
             "Accept-Encoding": "gzip, deflate, br",
@@ -28,84 +22,36 @@ class Clayton {
             "Sec-Fetch-Site": "same-origin",
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
         };
-        this.proxyIP = null;
     }
 
-    async log(msg, type = 'info') {
-        const timestamp = new Date().toLocaleTimeString();
+    log(msg, type = 'info') {
         const accountPrefix = `[Tài khoản ${this.accountIndex + 1}]`;
-        const ipPrefix = this.proxyIP ? `[${this.proxyIP}]` : '[Unknown IP]';
         let logMessage = '';
 
         switch(type) {
             case 'success':
-                logMessage = `${accountPrefix}${ipPrefix} ${msg}`.green;
+                logMessage = `${accountPrefix} ${msg}`.green;
                 break;
             case 'error':
-                logMessage = `${accountPrefix}${ipPrefix} ${msg}`.red;
+                logMessage = `${accountPrefix} ${msg}`.red;
                 break;
             case 'warning':
-                logMessage = `${accountPrefix}${ipPrefix} ${msg}`.yellow;
+                logMessage = `${accountPrefix} ${msg}`.yellow;
                 break;
             default:
-                logMessage = `${accountPrefix}${ipPrefix} ${msg}`.blue;
+                logMessage = `${accountPrefix} ${msg}`.blue;
         }
 
         console.log(logMessage);
     }
 
-    async fetchApiBaseId() {
-        try {
-            const response = await axios.get('https://tonclayton.fun/assets/index-KOCK7Ubh.js');
-            const jsContent = response.data;
-            
-            // Tìm API base ID từ nội dung file JS
-            const match = jsContent.match(/_ge="([^"]+)"/);
-            if (match && match[1]) {
-                this.apiBaseId = match[1];
-                return true;
-            } else {
-                throw new Error('Không tìm thấy API Base ID trong file JS');
-            }
-        } catch (error) {
-            this.log(`Lỗi khi lấy API Base ID: ${error.message}`, 'error');
-            return false;
-        }
-    }
-
-    getApiUrl(endpoint) {
-        if (!this.apiBaseId) {
-            throw new Error('API Base ID chưa được khởi tạo');
-        }
-        return `https://tonclayton.fun/api/${this.apiBaseId}/${endpoint}`;
-    }
-
-    async checkProxyIP() {
-        try {
-            const proxyAgent = new HttpsProxyAgent(this.proxy);
-            const response = await axios.get('https://api.ipify.org?format=json', { httpsAgent: proxyAgent });
-            if (response.status === 200) {
-                this.proxyIP = response.data.ip;
-                return response.data.ip;
-            } else {
-                throw new Error(`Cannot check proxy IP. Status code: ${response.status}`);
-            }
-        } catch (error) {
-            throw new Error(`Error checking proxy IP: ${error.message}`);
-        }
-    }
-
-    async makeRequest(endpoint, method, data = {}) {
-        const headers = { ...this.headers, "Init-Data": this.initData };
-        const proxyAgent = new HttpsProxyAgent(this.proxy);
-
+    async makeRequest(url, method, data = {}) {
         try {
             const response = await axios({
                 method,
-                url: this.getApiUrl(endpoint),
+                url,
                 data,
-                headers,
-                httpsAgent: proxyAgent
+                headers: { ...this.headers, "Init-Data": this.initData }
             });
             return { success: true, data: response.data };
         } catch (error) {
@@ -114,23 +60,23 @@ class Clayton {
     }
 
     async login() {
-        return this.makeRequest("user/authorization", 'post');
+        return this.makeRequest("https://tonclayton.fun/api/cc82f330-6a6d-4deb-a16b-6a335a67ffa7/user/authorization", 'post');
     }
 
     async dailyClaim() {
-        return this.makeRequest("user/daily-claim", 'post');
+        return this.makeRequest("https://tonclayton.fun/api/cc82f330-6a6d-4deb-a16b-6a335a67ffa7/user/daily-claim", 'post');
     }
 
     async getPartnerTasks() {
-        return this.makeRequest("tasks/partner-tasks", 'get');
+        return this.makeRequest("https://tonclayton.fun/api/cc82f330-6a6d-4deb-a16b-6a335a67ffa7/tasks/partner-tasks", 'get');
     }
 
     async completePartnerTask(taskId) {
-        return this.makeRequest("tasks/complete", 'post', { task_id: taskId });
+        return this.makeRequest("https://tonclayton.fun/api/cc82f330-6a6d-4deb-a16b-6a335a67ffa7/tasks/complete", 'post', { task_id: taskId });
     }
 
     async rewardPartnerTask(taskId) {
-        return this.makeRequest("tasks/claim", 'post', { task_id: taskId });
+        return this.makeRequest("https://tonclayton.fun/api/cc82f330-6a6d-4deb-a16b-6a335a67ffa7/tasks/claim", 'post', { task_id: taskId });
     }
 
     async handlePartnerTasks() {
@@ -179,15 +125,15 @@ class Clayton {
     }
 
     async getDailyTasks() {
-        return this.makeRequest("tasks/daily-tasks", 'get');
+        return this.makeRequest("https://tonclayton.fun/api/cc82f330-6a6d-4deb-a16b-6a335a67ffa7/tasks/daily-tasks", 'get');
     }
 
     async completeDailyTask(taskId) {
-        return this.makeRequest("tasks/complete", 'post', { task_id: taskId });
+        return this.makeRequest("https://tonclayton.fun/api/cc82f330-6a6d-4deb-a16b-6a335a67ffa7/tasks/complete", 'post', { task_id: taskId });
     }
 
     async claimDailyTask(taskId) {
-        return this.makeRequest("tasks/claim", 'post', { task_id: taskId });
+        return this.makeRequest("https://tonclayton.fun/api/cc82f330-6a6d-4deb-a16b-6a335a67ffa7/tasks/claim", 'post', { task_id: taskId });
     }
 
     async handleDailyTasks() {
@@ -239,7 +185,7 @@ class Clayton {
     }
 
     async play2048() {
-        const startGameResult = await this.makeRequest("game/start", 'post');
+        const startGameResult = await this.makeRequest("https://tonclayton.fun/api/cc82f330-6a6d-4deb-a16b-6a335a67ffa7/game/start", 'post');
         if (!startGameResult.success || !startGameResult.data.session_id) {
             this.log("Không thể bắt đầu trò chơi 2048", 'error');
             return;
@@ -259,7 +205,7 @@ class Clayton {
             await new Promise(resolve => setTimeout(resolve, Math.random() * 10000 + 5000));
     
             const saveGameResult = await this.makeRequest(
-                "game/save-tile",
+                "https://tonclayton.fun/api/cc82f330-6a6d-4deb-a16b-6a335a67ffa7/game/save-tile",
                 'post',
                 { session_id: sessionId, maxTile: milestone }
             );
@@ -271,7 +217,7 @@ class Clayton {
         }
     
         const endGameResult = await this.makeRequest(
-            "game/over",
+            "https://tonclayton.fun/api/cc82f330-6a6d-4deb-a16b-6a335a67ffa7/game/over",
             'post',
             { 
                 session_id: sessionId,
@@ -291,7 +237,7 @@ class Clayton {
     }
 
     async playStack() {
-        const startGameResult = await this.makeRequest("stack/st-game", 'post');
+        const startGameResult = await this.makeRequest("https://tonclayton.fun/api/cc82f330-6a6d-4deb-a16b-6a335a67ffa7/stack/st-game", 'post');
         if (!startGameResult.success) {
             this.log("Không thể bắt đầu trò chơi Stack", 'error');
             return;
@@ -306,7 +252,7 @@ class Clayton {
         while (Date.now() < gameEndTime && currentScoreIndex < scores.length) {
             const score = scores[currentScoreIndex];
 
-            const updateResult = await this.makeRequest("stack/update-game", 'post', { score });
+            const updateResult = await this.makeRequest("https://tonclayton.fun/api/cc82f330-6a6d-4deb-a16b-6a335a67ffa7/stack/update-game", 'post', { score });
             if (updateResult.success) {
                 this.log(`Cập nhật điểm Stack: ${score}`, 'success');
                 currentScoreIndex++;
@@ -319,7 +265,7 @@ class Clayton {
 
         const finalScore = scores[currentScoreIndex - 1] || 90;
 
-        const endGameResult = await this.makeRequest("stack/en-game", 'post', { score: finalScore, multiplier: 1 });
+        const endGameResult = await this.makeRequest("https://tonclayton.fun/api/cc82f330-6a6d-4deb-a16b-6a335a67ffa7/stack/en-game", 'post', { score: finalScore, multiplier: 1 });
         if (endGameResult.success) {
             const reward = endGameResult.data;
             this.log(`Trò chơi Stack đã kết thúc thành công. Nhận ${reward.earn} CL và ${reward.xp_earned} XP`, 'success');
@@ -329,6 +275,7 @@ class Clayton {
 
         await new Promise(resolve => setTimeout(resolve, 5000));
     }
+
     async playGames() {
         while (true) {
             const loginResult = await this.login();
@@ -363,7 +310,7 @@ class Clayton {
 
         while (attempts < maxAttempts) {
             attempts++;
-            tasksResult = await this.makeRequest("tasks/default-tasks", 'get');
+            tasksResult = await this.makeRequest("https://tonclayton.fun/api/cc82f330-6a6d-4deb-a16b-6a335a67ffa7/tasks/default-tasks", 'get');
             
             if (tasksResult.success) {
                 break;
@@ -382,13 +329,13 @@ class Clayton {
         const incompleteTasks = tasksResult.data.filter(task => !task.is_completed && task.task_id !== 9);
 
         for (const task of incompleteTasks) {
-            const completeResult = await this.makeRequest("tasks/complete", 'post', { task_id: task.task_id });
+            const completeResult = await this.makeRequest("https://tonclayton.fun/api/cc82f330-6a6d-4deb-a16b-6a335a67ffa7/tasks/complete", 'post', { task_id: task.task_id });
             
             if (!completeResult.success) {
                 continue;
             }
 
-            const claimResult = await this.makeRequest("tasks/claim", 'post', { task_id: task.task_id });
+            const claimResult = await this.makeRequest("https://tonclayton.fun/api/cc82f330-6a6d-4deb-a16b-6a335a67ffa7/tasks/claim", 'post', { task_id: task.task_id });
             
             if (claimResult.success) {
                 const reward = claimResult.data;
@@ -408,7 +355,7 @@ class Clayton {
 
         while (attempts < maxAttempts) {
             attempts++;
-            SuperTasks = await this.makeRequest("tasks/super-tasks", 'get');
+            SuperTasks = await this.makeRequest("https://tonclayton.fun/api/cc82f330-6a6d-4deb-a16b-6a335a67ffa7/tasks/super-tasks", 'get');
             
             if (SuperTasks.success) {
                 break;
@@ -427,13 +374,13 @@ class Clayton {
         const incompleteTasks = SuperTasks.data.filter(task => !task.is_completed);
 
         for (const task of incompleteTasks) {
-            const completeResult = await this.makeRequest("tasks/complete", 'post', { task_id: task.task_id });
+            const completeResult = await this.makeRequest("https://tonclayton.fun/api/cc82f330-6a6d-4deb-a16b-6a335a67ffa7/tasks/complete", 'post', { task_id: task.task_id });
             
             if (!completeResult.success) {
                 continue;
             }
 
-            const claimResult = await this.makeRequest("tasks/claim", 'post', { task_id: task.task_id });
+            const claimResult = await this.makeRequest("https://tonclayton.fun/api/cc82f330-6a6d-4deb-a16b-6a335a67ffa7/tasks/claim", 'post', { task_id: task.task_id });
             
             if (claimResult.success) {
                 const reward = claimResult.data;
@@ -447,23 +394,7 @@ class Clayton {
     }
 
     async processAccount() {
-        try {
-            await this.checkProxyIP();
-        } catch (error) {
-            this.log(`Cannot check proxy IP: ${error.message}`, 'warning');
-        }
-
-        try {
-            const apiBaseIdSuccess = await this.fetchApiBaseId();
-            if (!apiBaseIdSuccess) {
-                this.log('Failed to initialize API Base ID. Skipping account.', 'error');
-                return;
-            }
-        } catch (error) {
-            this.log(`Error initializing API Base ID: ${error.message}`, 'error');
-            return;
-        }
-
+       
         let loginSuccess = false;
         let loginAttempts = 0;
         let loginResult;
@@ -516,56 +447,21 @@ class Clayton {
 
 async function main() {
     const dataFile = path.join(__dirname, 'data.txt');
-    const data = fs.readFileSync(dataFile, 'utf8')
-        .replace(/\r/g, '')
-        .split('\n')
-        .filter(Boolean);
-
-    const proxyFile = path.join(__dirname, 'proxy.txt');
-    const proxies = fs.readFileSync(proxyFile, 'utf8')
-        .replace(/\r/g, '')
-        .split('\n')
-        .filter(Boolean);
-
-    while (true) {
-        for (let i = 0; i < data.length; i += maxThreads) {
-            const batch = data.slice(i, i + maxThreads);
-
-            const promises = batch.map((initData, indexInBatch) => {
-                const accountIndex = i + indexInBatch;
-                const proxy = proxies[accountIndex % proxies.length];
-                const client = new Clayton(accountIndex, proxy, initData);
-                return timeout(client.processAccount(), 10 * 60 * 1000).catch(err => {
-                    client.log(`Lỗi xử lý tài khoản: ${err.message}`, 'error');
-                });
-            });
-
-            await Promise.allSettled(promises);
-            await new Promise(resolve => setTimeout(resolve, 5000));
-        }
-        console.log(`Hoàn thành tất cả tài khoản, chờ 24 giờ để tiếp tục`);
-        await new Promise(resolve => setTimeout(resolve, 86400 * 1000));
+    const accounts = fs.readFileSync(dataFile, 'utf8')
+    .replace(/\r/g, '')
+    .split('\n')
+    .filter(Boolean);
+    for (let i = 0; i < accounts.length; i++) {
+        const client = new Clayton(i, accounts[i]);
+        await client.processAccount();
+        await new Promise(resolve => setTimeout(resolve, 5000));
     }
-}
 
-function timeout(promise, ms) {
-    return new Promise((resolve, reject) => {
-        const timer = setTimeout(() => {
-            reject(new Error('Timeout'));
-        }, ms);
-
-        promise.then(value => {
-            clearTimeout(timer);
-            resolve(value);
-        }).catch(err => {
-            clearTimeout(timer);
-            reject(err);
-        });
-    });
+    console.log('Hoàn thành xử lý tất cả tài khoản. Dừng 24 giờ trước khi bắt đầu lại...');
+    setTimeout(main, 86400 * 1000);
 }
 
 main().catch(err => {
-    console.error(err);
+    console.error('Đã xảy ra lỗi:', err.message);
     process.exit(1);
 });
-    

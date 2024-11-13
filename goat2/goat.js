@@ -9,18 +9,18 @@ class Goats {
     constructor() {
         this.headers = {
             "Accept": "application/json, text/plain, */*",
-            "Accept-Encoding": "gzip, deflate, br",
-            "Accept-Language": "vi-VN,vi;q=0.9,fr-FR;q=0.8,fr;q=0.7,en-US;q=0.6,en;q=0.5",
+            "Accept-Encoding": "gzip, deflate, br, zstd",
+            "Accept-Language": "en-US,en;q=0.9",
             "Content-Type": "application/json",
             "Origin": "https://dev.goatsbot.xyz",
             "Referer": "https://dev.goatsbot.xyz/",
-            "Sec-Ch-Ua": '"Not/A)Brand";v="99", "Google Chrome";v="115", "Chromium";v="115"',
+            "Sec-Ch-Ua": "\"Chromium\";v=\"130\", \"Microsoft Edge\";v=\"130\", \"Not?A_Brand\";v=\"99\"",
             "Sec-Ch-Ua-Mobile": "?0",
-            "Sec-Ch-Ua-Platform": '"Windows"',
+            "Sec-Ch-Ua-Platform": "\"Windows\"",
             "Sec-Fetch-Dest": "empty",
             "Sec-Fetch-Mode": "cors",
             "Sec-Fetch-Site": "same-site",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0"
         };
     }
 
@@ -56,15 +56,29 @@ class Goats {
     async login(rawData) {
         const url = "https://dev-api.goatsbot.xyz/auth/login";
         const userData = JSON.parse(decodeURIComponent(rawData.split('user=')[1].split('&')[0]));
-        
+        const refreshToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiNjcxY2NlNWI0ZTU5YWE3NTI0ZjFhNjJjIiwiaWF0IjoxNzMxMDQ4MDE1LCJleHAiOjE3MzM2NDAwMTUsInR5cGUiOiJyZWZyZXNoIn0.rVXT3c01IRvW7z9mPDni4BG68ya4r9oITO_VTwMggZ4";
+    
         try {
-            const response = await axios.post(url, {}, { 
-                headers: {
-                    ...this.headers,
-                    'Rawdata': rawData
-                }
-            });
 
+            const headers = {
+                "accept": "application/json, text/plain, */*",
+                "accept-language": "en-US,en;q=0.9",
+                "content-type": "application/json",
+                "origin": "https://dev.goatsbot.xyz",
+                "priority": "u=1, i",
+                "rawdata": rawData,
+                "referer": "https://dev.goatsbot.xyz/",
+                "sec-ch-ua": '"Chromium";v="130", "Microsoft Edge";v="130", "Not?A_Brand";v="99"',
+                "sec-ch-ua-mobile": "?0",
+                "sec-ch-ua-platform": '"Windows"',
+                "sec-fetch-dest": "empty",
+                "sec-fetch-mode": "cors",
+                "sec-fetch-site": "same-site",
+                "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0"
+            };
+
+            const response = await axios.post(url, {}, { headers });
+    
             if (response.status === 201) {
                 const { age, balance } = response.data.user;
                 const accessToken = response.data.tokens.access.token;
@@ -74,10 +88,18 @@ class Goats {
                     userData
                 };
             } else {
-                return { success: false, error: 'Login failed' };
+                return {
+                    success: false,
+                    message: "Unexpected response status",
+                    status: response.status
+                };
             }
         } catch (error) {
-            return { success: false, error: error.message };
+            return {
+                success: false,
+                message: "Error during login",
+                error: error.message
+            };
         }
     }
 
@@ -97,15 +119,22 @@ class Goats {
                     regular: []
                 };
                 
-                Object.keys(response.data).forEach(category => {
-                    response.data[category].forEach(mission => {
-                        if (category === 'SPECIAL MISSION') {
-                            missions.special.push(mission);
-                        } 
-                        else if (mission.status === false) {
-                            missions.regular.push(mission);
-                        }
-                    });
+                Object.entries(response.data).forEach(([category, missionList]) => {
+                    // Kiểm tra nếu missionList là một mảng
+                    if (Array.isArray(missionList)) {
+                        missionList.forEach(mission => {
+                            // Phân loại nhiệm vụ
+                            if (category === 'SPECIAL MISSION') {
+                                missions.special.push(mission);
+                            }
+                
+                            if (mission.status === false) {
+                                missions.regular.push(mission);
+                            }
+                        });
+                    } else {
+                        console.warn(`missionList không phải là một mảng cho category: ${category}`);
+                    }
                 });
                 return { success: true, missions };
             }

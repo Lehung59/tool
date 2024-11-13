@@ -4,7 +4,7 @@ timeout /t 5 /nobreak
 start wt -w 0 nt -d "C:\Users\nguye\Downloads\Telegram Desktop\tool\birdton_v2" cmd /k "node .\bird.js"
 
 timeout /t 5 /nobreak
-start wt -w 0 nt -d "C:\Users\nguye\Downloads\Telegram Desktop\tool\clayton" cmd /k "node .\clayton.js"
+start wt -w 0 nt -d "C:\Users\nguye\Downloads\Telegram Desktop\tool\clayton" cmd /k "node .\clay.js"
 
 timeout /t 5 /nobreak
 start wt -w 0 nt -d "C:\Users\nguye\Downloads\Telegram Desktop\tool\coubv23" cmd /k "node .\coub.js"
@@ -41,4 +41,11 @@ start wt -w 0 nt -d "C:\Users\nguye\Downloads\Telegram Desktop\tool\pineye2" cmd
 
 timeout /t 5 /nobreak
 start wt -w 0 nt -d "C:\Users\nguye\Downloads\Telegram Desktop\tool\birdssui3" cmd /k "node .\birds.js"
+
+timeout /t 5 /nobreak
+start wt -w 0 nt -d "C:\Users\nguye\Downloads\Telegram Desktop\tool\iceberg" cmd /k "node .\ice.js"
+
+timeout /t 5 /nobreak
+start wt -w 0 nt -d "C:\Users\nguye\Downloads\Telegram Desktop\tool\kiloex2" cmd /k "node .\kilo.js"
+
 
